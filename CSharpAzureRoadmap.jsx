@@ -23,6 +23,14 @@ import {
   Clock,
   Flag,
   Compass,
+  Cloud,
+  Database,
+  Workflow,
+  ShieldCheck,
+  Radio,
+  Activity,
+  Boxes,
+  ListChecks,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -66,7 +74,7 @@ const TRACKS = [
     modules: [
       {
         title: "C# Basics",
-        summary: "The C# language and .NET ecosystem from the ground up.",
+        summary: "Where everyone starts — the language itself, and how .NET actually hangs together.",
         time: "~2 weeks",
         theory: [
           "Introduction to C# and the .NET ecosystem",
@@ -121,7 +129,7 @@ const TRACKS = [
       },
       {
         title: "Advanced C# Features",
-        summary: "Delegates, events, generics, and LINQ fluency.",
+        summary: "The features that make C# finally click: delegates, events, generics, and LINQ.",
         time: "~2 weeks",
         theory: [
           "Delegates and events",
@@ -178,7 +186,7 @@ const TRACKS = [
       },
       {
         title: "ASP.NET Core Basics",
-        summary: "Build your first production-style REST API.",
+        summary: "Build your first real REST API — the kind other apps actually call.",
         time: "~2 weeks",
         theory: [
           "REST API fundamentals",
@@ -704,10 +712,25 @@ const HUB = {
 };
 
 const NAV_LINKS = [
-  { label: "Program Overview", href: "#how-it-works" },
+  { label: "Overview", href: "#how-it-works" },
   { label: "Tracks", href: "#tracks" },
-  { label: "Resources", href: "#resources" },
   { label: "Projects", href: "#projects" },
+  { label: "Checklist", href: "#checklist" },
+  { label: "Resources", href: "#resources" },
+];
+
+/* The 2026 senior bar, broken into categories. Adapted from Julio Casal's
+   "Senior .NET Developer Checklist" — used here as a self-assessment. */
+const CHECKLIST = [
+  { cat: ".NET", icon: Code2, items: ["C# (latest features)", "ASP.NET Core", "Minimal APIs", "Web APIs / REST", "GraphQL", "gRPC", "SignalR", "Background services"] },
+  { cat: "Cloud", icon: Cloud, items: ["Azure (App Service, Functions, AKS)", "AWS (Lambda, ECS)", "Terraform / Bicep", "Cloud cost optimization"] },
+  { cat: "Data", icon: Database, items: ["SQL Server", "PostgreSQL", "CosmosDB / MongoDB", "Redis", "EF Core", "Dapper", "Database migrations"] },
+  { cat: "DevOps", icon: Workflow, items: ["GitHub Actions", "Azure DevOps", "Docker", "Kubernetes / Helm", "CI/CD pipelines", "Feature flags", "GitOps"] },
+  { cat: "Security", icon: ShieldCheck, items: ["OAuth2 / OpenID Connect", "JWT validation", "RBAC / policy-based auth", "OWASP Top 10", "Secret management"] },
+  { cat: "Messaging", icon: Radio, items: ["RabbitMQ", "Kafka", "Azure Service Bus", "Event-driven architecture", "Pub/Sub patterns"] },
+  { cat: "Observability", icon: Activity, items: ["OpenTelemetry", "Structured logging", "Distributed tracing", "Grafana / Prometheus", "Health checks"] },
+  { cat: "Architecture", icon: Boxes, items: ["Microservices", "Domain-Driven Design", "Vertical slices", "Design patterns", "API versioning", "System design"] },
+  { cat: "Testing", icon: FlaskConical, items: ["xUnit", "Integration tests", "Testcontainers", "Mocking frameworks", "Load testing"] },
 ];
 
 const TAG_COLOR = {
@@ -729,6 +752,7 @@ export default function CSharpAzureRoadmap() {
   const [expanded, setExpanded] = useState("beginner-0"); // open the first module so it's obvious it's interactive
   const [completed, setCompleted] = useState(() => new Set());
   const [hubTab, setHubTab] = useState("Books");
+  const [skills, setSkills] = useState(() => new Set());
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -776,6 +800,30 @@ export default function CSharpAzureRoadmap() {
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
+
+  const toggleSkill = (key) =>
+    setSkills((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+
+  const skillTotal = useMemo(
+    () => CHECKLIST.reduce((a, c) => a + c.items.length, 0),
+    []
+  );
+  const skillDone = skills.size;
+  const skillPct = Math.round((skillDone / skillTotal) * 100);
+  const readiness =
+    skillDone === 0
+      ? "Tick off everything you can already do — no pressure. Most people start with almost none of these checked, and that's exactly the point."
+      : skillPct < 34
+      ? "Early days. Treat this as your map for the next year, not a bar you have to clear today."
+      : skillPct < 67
+      ? "You're well on your way — a solid mid-level profile is taking shape."
+      : skillPct < 100
+      ? "You're basically senior-shaped. Close the last few gaps and start applying."
+      : "That's the entire checklist. Go get the job. 🎯";
 
   const doneCount = current.modules.filter((_, i) =>
     completed.has(`${current.id}-${i}`)
@@ -954,7 +1002,7 @@ export default function CSharpAzureRoadmap() {
         <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-8">
           <div className={`mx-auto mb-7 inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium ${chipBg} ${textMuted}`}>
             <Sparkles size={13} style={{ color: ACCENT.midlevel }} />
-            Self-paced · Updated for .NET 9
+            Free · Self-paced · Current to .NET 9
           </div>
 
           <h1 className="text-[34px] font-bold leading-[1.08] sm:text-[48px] sm:leading-[1.05] lg:text-[56px]" style={{ letterSpacing: "-0.02em" }}>
@@ -962,8 +1010,9 @@ export default function CSharpAzureRoadmap() {
           </h1>
 
           <p className={`mx-auto mt-6 max-w-2xl text-[17px] ${textMuted}`} style={{ lineHeight: 1.7 }}>
-            A structured, self-paced roadmap from zero to production. Three tracks.
-            Real projects. No fluff.
+            The roadmap I wish someone had handed me when I started. It takes you from
+            your very first line of C# to shipping real services — three tracks, dozens
+            of projects you actually build, and not a single hour of filler.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -998,12 +1047,12 @@ export default function CSharpAzureRoadmap() {
       </section>
 
       {/* ========================= HOW IT WORKS ========================= */}
-      <Section id="how-it-works" eyebrow="The Method" title="How it works" sub="Three simple steps. Built for people who learn by shipping, not by watching." textMuted={textMuted} textFaint={textFaint}>
+      <Section id="how-it-works" eyebrow="The Method" title="How it works" sub="Three steps. Made for people who learn by building things — not by watching a 40-hour course at 2x speed and forgetting all of it." textMuted={textMuted} textFaint={textFaint}>
         <div className="relative grid gap-5 md:grid-cols-3">
           {[
-            { icon: GitBranch, t: "Choose Your Track", d: "Pick your level: Beginner, Mid-Level, or Senior. Each track builds on the last.", c: ACCENT.beginner },
-            { icon: Hammer, t: "Learn by Building", d: "Every module ends with a hands-on project. Theory is only useful when applied.", c: ACCENT.midlevel },
-            { icon: Rocket, t: "Ship Your Portfolio", d: "Finish with 5+ GitHub repos that prove your skills to any employer.", c: ACCENT.senior },
+            { icon: GitBranch, t: "Pick where you're starting", d: "Be honest about your level — Beginner, Mid, or Senior. Each track picks up exactly where the last one leaves off.", c: ACCENT.beginner },
+            { icon: Hammer, t: "Build the thing", d: "Every module ends in something you actually write. Reading about generics has never once gotten anyone hired.", c: ACCENT.midlevel },
+            { icon: Rocket, t: "Walk away with proof", d: "Finish with real repos on your GitHub — the kind a hiring manager can clone, run, and poke holes in.", c: ACCENT.senior },
           ].map((s, i) => (
             <div key={s.t} className="relative">
               {i < 2 && (
@@ -1027,16 +1076,16 @@ export default function CSharpAzureRoadmap() {
       </Section>
 
       {/* ========================= TRACK SELECTOR ========================= */}
-      <Section id="tracks" eyebrow="Curriculum" title="Choose your track" sub="Pick a track to load its full roadmap below. Every resource is a real, clickable link — videos, docs, books, repos, and labs." textMuted={textMuted} textFaint={textFaint}>
+      <Section id="tracks" eyebrow="Curriculum" title="Pick your track" sub="Choose one and its full roadmap opens up below. Every link here is the real thing — the actual video, the actual docs page, the actual repo — not a list of titles you have to go hunt down yourself." textMuted={textMuted} textFaint={textFaint}>
         {/* beginner reassurance */}
         <div className="mb-7 flex items-start gap-3 rounded-2xl border p-4 sm:p-5" style={{ background: `${ACCENT.beginner}0d`, borderColor: `${ACCENT.beginner}33` }}>
           <Compass size={20} className="mt-0.5 shrink-0" style={{ color: ACCENT.beginner }} />
           <p className={`text-[14px] ${textMuted}`} style={{ lineHeight: 1.65 }}>
-            <span className={`font-semibold ${textMain}`}>New to all this?</span> Start with the{" "}
+            <span className={`font-semibold ${textMain}`}>Never written a line of C#?</span> Start with the{" "}
             <button onClick={() => selectTrack("beginner")} className="font-semibold underline decoration-dotted underline-offset-2" style={{ color: ACCENT.beginner }}>
               Beginner track
             </button>
-            . It assumes zero experience. Work top to bottom — each module ends in a project you build, and finishes with a capstone you can show an employer.
+            . It assumes you know nothing, and that's fine — everyone starts there. Go top to bottom, build the project at the end of each module, and you'll come out the other side with a capstone you can actually put in front of someone.
           </p>
         </div>
 
@@ -1315,7 +1364,7 @@ export default function CSharpAzureRoadmap() {
       </Section>
 
       {/* ========================= PROJECTS ========================= */}
-      <Section id="projects" eyebrow="Proof of Work" title="Capstone projects" sub="You finish each track with repos a hiring manager can actually open. Real stacks, real scope." textMuted={textMuted} textFaint={textFaint}>
+      <Section id="projects" eyebrow="Proof of Work" title="What you'll actually build" sub="None of these are toy to-do apps. They're real projects with real stacks — the kind of thing that makes an interviewer lean in and go, 'wait, you've actually shipped this?'" textMuted={textMuted} textFaint={textFaint}>
         <div className="grid gap-5 md:grid-cols-2">
           {PROJECTS.map((p) => (
             <div
@@ -1343,8 +1392,100 @@ export default function CSharpAzureRoadmap() {
         </div>
       </Section>
 
+      {/* ========================= CHECKLIST ========================= */}
+      <Section id="checklist" eyebrow="Reality check" title="Where do you stand?" sub="This is what 2026 senior .NET roles actually ask for. Tick off what you can already do — nobody has all of it, and the roadmap above covers most of what's left." textMuted={textMuted} textFaint={textFaint}>
+        {/* readiness summary */}
+        <div className={`mb-8 rounded-2xl border p-6 backdrop-blur-md sm:p-7 ${surface}`}>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl" style={{ background: `${ACCENT.senior}1a`, color: ACCENT.senior, border: `1px solid ${ACCENT.senior}33` }}>
+                <ListChecks size={22} />
+              </span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold" style={{ color: ACCENT.senior }}>{skillDone}</span>
+                  <span className={`text-sm ${textFaint}`}>/ {skillTotal} skills</span>
+                </div>
+                <p className={`mt-0.5 max-w-md text-[13.5px] ${textMuted}`} style={{ lineHeight: 1.55 }}>{readiness}</p>
+              </div>
+            </div>
+            <div className="sm:w-64">
+              <div className="mb-1.5 flex items-center justify-between text-xs">
+                <span className={textFaint}>Job-readiness</span>
+                <span className="font-semibold" style={{ color: ACCENT.senior }}>{skillPct}%</span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full" style={{ background: dark ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)" }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${skillPct}%`, background: `linear-gradient(90deg, ${ACCENT.midlevel}, ${ACCENT.senior})` }} />
+              </div>
+              {skillDone > 0 && (
+                <button onClick={() => setSkills(new Set())} className={`mt-2 text-xs ${textFaint} underline decoration-dotted underline-offset-2 hover:opacity-80`}>
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* category cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {CHECKLIST.map((c) => {
+            const Icon = c.icon;
+            const catDone = c.items.filter((it) => skills.has(`${c.cat}:${it}`)).length;
+            const allDone = catDone === c.items.length;
+            return (
+              <div key={c.cat} className={`rounded-2xl border p-5 backdrop-blur-md transition-all ${surface}`}>
+                <div className="mb-4 flex items-center gap-2.5">
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border ${chipBg}`} style={allDone ? { background: `${ACCENT.senior}1a`, borderColor: `${ACCENT.senior}40`, color: ACCENT.senior } : undefined}>
+                    <Icon size={16} className={allDone ? "" : textMuted} />
+                  </span>
+                  <h4 className="text-[15px] font-bold uppercase tracking-wide">{c.cat}</h4>
+                  <span className="ml-auto text-xs font-semibold" style={{ color: allDone ? ACCENT.senior : undefined }}>
+                    <span className={allDone ? "" : textFaint}>{catDone}/{c.items.length}</span>
+                  </span>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {c.items.map((it) => {
+                    const key = `${c.cat}:${it}`;
+                    const on = skills.has(key);
+                    return (
+                      <li key={it}>
+                        <button
+                          onClick={() => toggleSkill(key)}
+                          className={`group flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${surfaceHover}`}
+                        >
+                          <span
+                            className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border transition-all"
+                            style={{
+                              background: on ? ACCENT.senior : "transparent",
+                              borderColor: on ? ACCENT.senior : dark ? "#475569" : "#cbd5e1",
+                            }}
+                          >
+                            {on && <Check size={13} color="#fff" />}
+                          </span>
+                          <span className={`text-[13.5px] transition-colors ${on ? textFaint : textMuted}`} style={on ? { textDecoration: "line-through", textDecorationColor: `${ACCENT.senior}99` } : undefined}>
+                            {it}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className={`mt-6 text-center text-xs ${textFaint}`}>
+          Checklist adapted from{" "}
+          <a href="https://juliocasal.com/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:opacity-80">
+            Julio Casal's “Senior .NET Developer Checklist (2026)”
+          </a>
+          , based on real job posts. Saved state resets on refresh.
+        </p>
+      </Section>
+
       {/* ========================= RESOURCES HUB ========================= */}
-      <Section id="resources" eyebrow="Curated, not exhaustive" title="Resources hub" sub="The best-of list — every card links straight to the source. The people and repos worth your time, tagged by where they fit." textMuted={textMuted} textFaint={textFaint}>
+      <Section id="resources" eyebrow="Curated, not exhaustive" title="The good stuff, in one place" sub="No 300-link mega-dump that you'll never get through. Just the people, books, and repos genuinely worth your time — each one links straight to the source and is tagged for where it fits." textMuted={textMuted} textFaint={textFaint}>
         <div className="mb-7 flex flex-wrap gap-2">
           {Object.keys(HUB).map((tab) => {
             const Icon = HUB[tab].icon;
@@ -1415,7 +1556,7 @@ export default function CSharpAzureRoadmap() {
               <span className="grid h-8 w-8 place-items-center rounded-lg text-white" style={{ background: "linear-gradient(135deg,#7c3aed,#06b6d4)" }}>
                 <Code2 size={16} />
               </span>
-              <span className="text-sm font-medium">Built for the next generation of .NET developers</span>
+              <span className="text-sm font-medium">Made by a developer who got tired of roadmaps that were just lists of links.</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1432,7 +1573,7 @@ export default function CSharpAzureRoadmap() {
           </div>
 
           <div className={`mt-10 border-t pt-6 text-center text-xs ${textFaint}`} style={{ borderColor: hairline }}>
-            Curated by Your Name · A self-paced C# .NET &amp; Azure training program
+            Put together by Your Name · A free, self-paced path into C#, .NET &amp; Azure
           </div>
         </div>
       </footer>
