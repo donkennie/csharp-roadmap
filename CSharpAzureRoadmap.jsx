@@ -1573,7 +1573,11 @@ export default function CSharpAzureRoadmap() {
           </div>
 
           <div className={`mt-10 border-t pt-6 text-center text-xs ${textFaint}`} style={{ borderColor: hairline }}>
+<<<<<<< HEAD
             Put together by Your Name · A free, self-paced path into C#, .NET &amp; Azure
+=======
+            Curated by Donkennie· A self-paced C# .NET &amp; Azure training program
+>>>>>>> 6f4b0d059efd0de21d6ec483c2b6fe1ea6c71886
           </div>
         </div>
       </footer>
